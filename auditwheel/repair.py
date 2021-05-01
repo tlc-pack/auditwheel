@@ -30,8 +30,9 @@ WHEEL_INFO_RE = re.compile(
 
 def repair_wheel(wheel_path: str, abis: List[str], lib_sdir: str, out_dir: str,
                  update_tags: bool, patcher: ElfPatcher,
-                 strip: bool = False) -> Optional[str]:
+                 strip: bool = False, skip_libs: List[str] = "") -> Optional[str]:
 
+    skip_libs = set(skip_libs)
     external_refs_by_fn = get_wheel_elfdata(wheel_path)[1]
 
     # Do not repair a pure wheel, i.e. has no external refs
@@ -63,10 +64,17 @@ def repair_wheel(wheel_path: str, abis: List[str], lib_sdir: str, out_dir: str,
 
             ext_libs = v[abis[0]]['libs']  # type: Dict[str, str]
             for soname, src_path in ext_libs.items():
+                libname = soname[:soname.find(".so")]
+
+                if libname in skip_libs:
+                    logger.info("Skip library %s", soname)
+                    continue
+
                 if src_path is None:
                     raise ValueError(('Cannot repair wheel, because required '
                                       'library "%s" could not be located') %
                                      soname)
+
 
                 new_soname, new_path = copylib(src_path, dest_dir, patcher)
                 soname_map[soname] = (new_soname, new_path)

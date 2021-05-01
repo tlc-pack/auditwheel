@@ -65,6 +65,9 @@ below.
                    action='store_true',
                    help='Strip symbols in the resulting wheel',
                    default=False)
+    p.add_argument('--skip-libs',
+                   default="",
+                   help='Skip the libraries during repair')
     p.add_argument('--only-plat',
                    dest='ONLY_PLAT',
                    action='store_true',
@@ -126,7 +129,8 @@ def execute(args, p):
                              out_dir=args.WHEEL_DIR,
                              update_tags=args.UPDATE_TAGS,
                              patcher=patcher,
-                             strip=args.STRIP)
+                             strip=args.STRIP,
+                             skip_libs=args.skip_libs.split(","))
 
     if out_wheel is not None:
         logger.info('\nFixed-up wheel written to %s', out_wheel)
